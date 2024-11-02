@@ -10,7 +10,6 @@ os.environ["AWS_ACCESS_KEY_ID"] = access_df["Access key ID"][0]
 os.environ["AWS_SECRET_ACCESS_KEY"] = access_df["Secret access key"][0]
 os.environ["AWS_DEFAULT_REGION"] = "us-west-2"
 
-
 session = boto3.Session(
     aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
     aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],

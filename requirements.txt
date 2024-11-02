@@ -3,3 +3,4 @@ awscli
 streamlit
 langchain_aws
 langchain
+yfinance
