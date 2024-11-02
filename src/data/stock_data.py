@@ -27,13 +27,17 @@ class StockDataAPI:
         if df is not None and not df.empty:
             # Daily change
             metrics["daily_change"] = (
-                (df["Close"][-1] - df["Close"][-2]) / df["Close"][-2] * 100
+                (df["Close"].iloc[-1] - df["Close"].iloc[-2])
+                / df["Close"].iloc[-2]
+                * 100
             )
 
             # Weekly change
             if len(df) >= 5:
                 metrics["weekly_change"] = (
-                    (df["Close"][-1] - df["Close"][-5]) / df["Close"][-5] * 100
+                    (df["Close"].iloc[-1] - df["Close"].iloc[-5])
+                    / df["Close"].iloc[-5]
+                    * 100
                 )
             else:
                 metrics["weekly_change"] = 0
@@ -41,7 +45,9 @@ class StockDataAPI:
             # Monthly change
             if len(df) >= 20:
                 metrics["monthly_change"] = (
-                    (df["Close"][-1] - df["Close"][-20]) / df["Close"][-20] * 100
+                    (df["Close"].iloc[-1] - df["Close"].iloc[-20])
+                    / df["Close"].iloc[-20]
+                    * 100
                 )
             else:
                 metrics["monthly_change"] = 0
@@ -50,9 +56,9 @@ class StockDataAPI:
             metrics["avg_volume"] = df["Volume"].mean()
 
             # Current price
-            metrics["current_price"] = df["Close"][-1]
+            metrics["current_price"] = df["Close"].iloc[-1]
 
             # Current volume
-            metrics["current_volume"] = df["Volume"][-1]
+            metrics["current_volume"] = df["Volume"].iloc[-1]
 
         return metrics
