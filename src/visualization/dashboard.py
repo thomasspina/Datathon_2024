@@ -9,14 +9,17 @@ class Dashboard:
     """Class to handle all dashboard visualization logic"""
 
     @staticmethod
-    def create_stock_chart(df: pd.DataFrame) -> go.Figure:
-        """Create stock price chart with volume."""
+    def create_technical_chart(
+        df: pd.DataFrame, indicators: Dict[str, pd.Series]
+    ) -> go.Figure:
+        """Create comprehensive technical analysis chart"""
         fig = make_subplots(
-            rows=2,
+            rows=4,
             cols=1,
             shared_xaxes=True,
-            vertical_spacing=0.1,
-            row_heights=[0.7, 0.3],
+            vertical_spacing=0.05,
+            row_heights=[0.4, 0.2, 0.2, 0.2],
+            subplot_titles=("Price & Indicators", "Volume", "RSI", "MACD"),
         )
 
         # Candlestick chart
@@ -34,23 +37,38 @@ class Dashboard:
         )
 
         # Add Moving Averages
+        colors = ["orange", "blue", "red"]
+        periods = [20, 50, 200]
+        for period, color in zip(periods, colors):
+            fig.add_trace(
+                go.Scatter(
+                    x=df.index,
+                    y=indicators[f"SMA_{period}"],
+                    name=f"{period}-day MA",
+                    line=dict(color=color),
+                ),
+                row=1,
+                col=1,
+            )
+
+        # Add Bollinger Bands
         fig.add_trace(
             go.Scatter(
                 x=df.index,
-                y=df["Close"].rolling(window=20).mean(),
-                name="20-day MA",
-                line=dict(color="orange"),
+                y=indicators["BB_Upper"],
+                name="BB Upper",
+                line=dict(color="gray", dash="dash"),
             ),
             row=1,
             col=1,
         )
-
         fig.add_trace(
             go.Scatter(
                 x=df.index,
-                y=df["Close"].rolling(window=50).mean(),
-                name="50-day MA",
-                line=dict(color="blue"),
+                y=indicators["BB_Lower"],
+                name="BB Lower",
+                line=dict(color="gray", dash="dash"),
+                fill="tonexty",
             ),
             row=1,
             col=1,
@@ -68,19 +86,49 @@ class Dashboard:
             col=1,
         )
 
+        # RSI
+        fig.add_trace(
+            go.Scatter(x=df.index, y=indicators["RSI"], name="RSI"), row=3, col=1
+        )
+
+        # Add RSI lines
+        fig.add_hline(y=70, line_dash="dash", line_color="red", row=3)
+        fig.add_hline(y=30, line_dash="dash", line_color="green", row=3)
+
+        # MACD
+        fig.add_trace(
+            go.Scatter(x=df.index, y=indicators["MACD"], name="MACD"), row=4, col=1
+        )
+        fig.add_trace(
+            go.Scatter(x=df.index, y=indicators["Signal_Line"], name="Signal Line"),
+            row=4,
+            col=1,
+        )
+
+        # MACD Histogram
+        fig.add_trace(
+            go.Bar(x=df.index, y=indicators["MACD_Histogram"], name="MACD Histogram"),
+            row=4,
+            col=1,
+        )
+
         fig.update_layout(
-            title="Stock Price and Volume Analysis",
+            height=1000,
+            showlegend=True,
+            xaxis4_title="Date",
             yaxis_title="Price",
             yaxis2_title="Volume",
-            xaxis2_title="Date",
-            height=800,
+            yaxis3_title="RSI",
+            yaxis4_title="MACD",
         )
 
         return fig
 
     @staticmethod
-    def display_metrics(metrics: Dict):
-        """Display key metrics in the dashboard."""
+    def display_metrics(metrics: Dict, signals: Dict[str, tuple]):
+        """Display key metrics and signals in the dashboard."""
+        # Market Metrics
+        st.subheader("Market Metrics")
         col1, col2, col3, col4 = st.columns(4)
 
         with col1:
@@ -103,6 +151,39 @@ class Dashboard:
         with col4:
             st.metric("Monthly Change", f"{metrics['monthly_change']:.2f}%")
 
+        # Technical Signals
+        st.subheader("Technical Signals")
+        sig_col1, sig_col2, sig_col3, sig_col4 = st.columns(4)
+
+        with sig_col1:
+            signal, color = signals["RSI"]
+            st.markdown(
+                f"**RSI Signal:** <span style='color:{color}'>{signal}</span>",
+                unsafe_allow_html=True,
+            )
+
+        with sig_col2:
+            signal, color = signals["MACD"]
+            st.markdown(
+                f"**MACD Signal:** <span style='color:{color}'>{signal}</span>",
+                unsafe_allow_html=True,
+            )
+
+        with sig_col3:
+            signal, color = signals["Trend"]
+            st.markdown(
+                f"**Trend Signal:** <span style='color:{color}'>{signal}</span>",
+                unsafe_allow_html=True,
+            )
+
+        with sig_col4:
+            signal, color = signals["BB"]
+            st.markdown(
+                f"**Bollinger Bands:** <span style='color:{color}'>{signal}</span>",
+                unsafe_allow_html=True,
+            )
+
+    # Your existing methods remain the same...
     @staticmethod
     def display_company_info(stock_info: Dict):
         """Display company information."""
