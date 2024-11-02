@@ -1,5 +1,0 @@
-boto3
-awscli
-streamlit
-langchain_aws
-langchain
