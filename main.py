@@ -32,9 +32,7 @@ def main():
     )
 
     # Interval selection
-    interval = st.sidebar.selectbox(
-        "Select Time Interval", options=["1d", "1wk", "1mo"], index=0
-    )
+    st.sidebar.selectbox("Select Time Interval", options=["1d", "1wk", "1mo"], index=0)
 
     # Initialize API and Dashboard
     stock_api = StockDataAPI()
