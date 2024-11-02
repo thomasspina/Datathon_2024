@@ -1,2 +1,5 @@
 # Datathon_2024
-we the bus
+
+
+fist install requirements : pip install -r requirements.txt
+to run app : streamlit run .\src\chatbot_frontend.py
