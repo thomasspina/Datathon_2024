@@ -72,9 +72,11 @@ def main():
                 "Enter Stock Symbol (e.g., AAPL)", value="AAPL"
             ).upper()
         with col2:
-            start_date = st.date_input(
-                "Select Start Date", value=datetime.now() - timedelta(days=365)
+            unformatted_start_date = st.date_input(
+                "Select Start Date", value=datetime.now().date() - timedelta(days=365)
             )
+            start_date = unformatted_start_date.strftime("%Y-%m-%d")
+
         with col3:
             interval = st.selectbox("Interval", options=["1d", "1wk", "1mo"], index=0)
 
@@ -88,7 +90,7 @@ def main():
             with st.spinner("Fetching stock data..."):
                 # Get comprehensive stock data
                 stock_data = stock_api.fetch_stock_data_with_indicators(
-                    symbol, start_date, datetime.now()
+                    symbol, start_date, datetime.now().strftime("%Y-%m-%d")
                 )
 
                 if stock_data is not None:
@@ -180,16 +182,16 @@ def main():
                     )
 
     # Sidebar settings
-    with st.sidebar:
-        if st.button("Reset Session"):
-            init_state()
+    # with st.sidebar:
+    #     if st.button("Reset Session"):
+    #         init_state()
 
-        st.title("Settings")
-        with st.expander("Technical Analysis Parameters"):
-            st.slider("RSI Period", 7, 21, 14)
-            st.slider("MACD Fast Period", 8, 16, 12)
-            st.slider("MACD Slow Period", 20, 30, 26)
-            st.slider("MACD Signal Period", 5, 13, 9)
+    #     st.title("Settings")
+    #     with st.expander("Technical Analysis Parameters"):
+    #         st.slider("RSI Period", 7, 21, 14)
+    #         st.slider("MACD Fast Period", 8, 16, 12)
+    #         st.slider("MACD Slow Period", 20, 30, 26)
+    #         st.slider("MACD Signal Period", 5, 13, 9)
 
 
 if __name__ == "__main__":
