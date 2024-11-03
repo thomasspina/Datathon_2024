@@ -137,6 +137,21 @@ def main():
                         dashboard.display_company_info(stock_info)
                     dashboard.display_raw_data(df, symbol)
 
+            with chat_col:
+                # Send prompt to assistant with stock information
+                prompt = f"Provide consise information about the company {symbol}."
+                st.session_state.messages.append({"role": "user", "content": prompt})
+                with st.chat_message("assistant"):
+                    placeholder = st.empty()
+                    placeholder.markdown("...")
+                    response = bedrock_agent.ask_claude(
+                        prompt
+                    )
+                    placeholder.markdown(response, unsafe_allow_html=True)
+                    st.session_state.messages.append(
+                        {"role": "assistant", "content": response}
+                    )
+
 
 if __name__ == "__main__":
     main()

@@ -4,3 +4,5 @@ streamlit
 langchain_aws
 langchain
 yfinance
+plotly
+json
