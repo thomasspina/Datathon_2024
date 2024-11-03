@@ -2,6 +2,8 @@ import yfinance as yf
 import pandas as pd
 from datetime import datetime
 from typing import Dict, Any
+import pandas as pd
+from typing import Any, Union
 
 
 class StockDataAPI:
@@ -89,7 +91,7 @@ class StockDataAPI:
             income_stmt = stock.income_stmt
             latest_quarter = income_stmt.columns[0] if not income_stmt.empty else None
 
-            return {
+            key_stats ={
                 "valuation": {
                     "market_cap": info.get("marketCap"),
                     "enterprise_value": info.get("enterpriseValue"),
@@ -120,6 +122,8 @@ class StockDataAPI:
                     "payout_ratio": info.get("payoutRatio"),
                 },
             }
+
+            return key_stats
         except Exception as e:
             print(f"Error fetching key stats: {e}")
             return None
@@ -130,8 +134,7 @@ class StockDataAPI:
         try:
             stock = yf.Ticker(symbol)
             info = stock.info
-
-            return {
+            ratings =  {
                 "analyst_price_target": {
                     "current": info.get("currentPrice"),
                     "target_mean": info.get("targetMeanPrice"),
@@ -140,6 +143,7 @@ class StockDataAPI:
                     "number_of_analysts": info.get("numberOfAnalystOpinions"),
                 }
             }
+            return ratings
         except Exception as e:
             print(f"Error fetching analyst ratings: {e}")
             return None
@@ -189,3 +193,28 @@ class StockDataAPI:
             )
 
         return metrics
+
+    @staticmethod
+    def data_to_string(data: Union[Dict, pd.DataFrame, list, str, int, float]) -> str:
+        """
+        Convert complex data structures to a string format.
+        Handles nested dicts, lists, DataFrames, and other common types.
+        """
+        if isinstance(data, pd.DataFrame):
+            # Convert DataFrame to a formatted string (limited rows for readability)
+            return data.to_string(max_rows=5, max_cols=5)
+        
+        elif isinstance(data, dict):
+            # Recursively format dictionary items
+            result = []
+            for key, value in data.items():
+                result.append(f"{key}: {StockDataAPI.data_to_string(value)}")
+            return "{\n" + "\n".join(result) + "\n}"
+        
+        elif isinstance(data, list):
+            # Convert each item in the list to a string
+            return "[" + ", ".join(StockDataAPI.data_to_string(item) for item in data) + "]"
+        
+        else:
+            # For basic types (str, int, float), convert directly to string
+            return str(data)

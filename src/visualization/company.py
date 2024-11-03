@@ -1,14 +1,9 @@
-import yfinance as yf
 import streamlit as st
-import plotly.graph_objects as go
-from datetime import datetime, timedelta
-from src.data.stock_data import StockDataAPI
-from src.visualization.dashboard import Dashboard
-from src.analysis.technical import TechnicalAnalysis
+from src.visualization.chat import ChatBox
 
 
 class CompanyComponent():
-    def __init__(self, symbol, history_callback):
+    def __init__(self, history_callback):
         controls, _ = st.columns([2, 4])
         with controls:
             self.add_dashboard_controls(history_callback)
@@ -46,4 +41,4 @@ class CompanyComponent():
         pass
 
     def add_chat_box(self):
-        pass
+        ChatBox()

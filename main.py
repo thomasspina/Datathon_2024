@@ -19,16 +19,19 @@ class MainComponent():
         if "history" not in st.session_state:
             st.session_state.history = [("AMZN", "Amazon"), ("NA.TO", "Banque Nationale")]
 
+        # go to where user left off
+        if st.session_state.get("selected"):
+            self.navigate(st.session_state.selected)
+
     
     def navigate(self, symbol):
         st.session_state.symbol = symbol
-        company.CompanyComponent(symbol, self.update_history)
+        company.CompanyComponent(self.update_history)
 
     def update_history(self):
         st.session_state.symbol = st.session_state.symbol_input
         if st.session_state.symbol not in [x for x, _ in st.session_state.history]:
             st.session_state.history.append((st.session_state.symbol, st.session_state.symbol))
-
 
 
 if __name__ == "__main__":
