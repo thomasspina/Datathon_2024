@@ -5,50 +5,48 @@ import json
 import pandas as pd
 from config import settings
 
+
 def ask_claude(prompt):
     session = boto3.Session(
         aws_access_key_id="AKIA3BNTGPX65AXAVA6U",
         aws_secret_access_key="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",
         region_name="us-west-2",
     )
-    bedrock_runtime = session.client(
-        "bedrock-runtime", region_name="us-west-2"
-    )
+    bedrock_runtime = session.client("bedrock-runtime", region_name="us-west-2")
 
     kwargs = {
-    "modelId": "anthropic.claude-3-sonnet-20240229-v1:0",
-    "contentType": "application/json",
-    "accept": "application/json",
-    "body": json.dumps({
-        "anthropic_version": "bedrock-2023-05-31",
-        "max_tokens": 1000,
-        "messages": [
-        {
-            "role": "user",
-            "content": [
+        "modelId": "anthropic.claude-3-sonnet-20240229-v1:0",
+        "contentType": "application/json",
+        "accept": "application/json",
+        "body": json.dumps(
             {
-                "type": "text",
-                "text": prompt
+                "anthropic_version": "bedrock-2023-05-31",
+                "max_tokens": 1000,
+                "messages": [
+                    {"role": "user", "content": [{"type": "text", "text": prompt}]}
+                ],
             }
-            ]
-        }
-        ]
-    })
+        ),
     }
     response = bedrock_runtime.invoke_model(**kwargs)
-    body = json.loads(response['body'].read())
+    body = json.loads(response["body"].read())
     formated_body = format_response(body)
+    print(formated_body)
     return formated_body
+
 
 def format_response(response):
     # Extract and format the content field into a readable string
     content_list = response.get("content", [])
-    formatted_text = "\n".join([item["text"] for item in content_list if item["type"] == "text"])
+    formatted_text = "\n".join(
+        [item["text"] for item in content_list if item["type"] == "text"]
+    )
     return formatted_text
 
 
 def invoke_agent(session_id, prompt):
     try:
+        print("session id is: ", session_id)
         session = boto3.Session(
             aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
             aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
