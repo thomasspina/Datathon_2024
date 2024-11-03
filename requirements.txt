@@ -1,0 +1,4 @@
+python-dotenv
+streamlit
+yfinance
+boto3
