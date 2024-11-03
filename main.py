@@ -6,7 +6,6 @@ class MainPage():
 
     def __init__(self):
         st.set_page_config(page_title="Stock Analysis Tool", layout="wide")
-        st.session_state.page = Page.STOCK_ANALYSIS
         st.sidebar.title("History")
 
         self.init_state()
@@ -23,8 +22,6 @@ class MainPage():
         # go to where user left off
         if st.session_state.get("selected"):
             self.navigate(st.session_state.selected)
-        if st.session_state.page == Page.CHAT_BOX:
-            self.company.navigate_to_chat()
 
 
     
@@ -32,9 +29,6 @@ class MainPage():
         st.session_state.selected = symbol
         company.CompanyPage(symbol)
 
-class Page:
-    STOCK_ANALYSIS = "stock analysis"
-    CHAT_BOX = "chat box"
 
 if __name__ == "__main__":
     MainPage()

@@ -13,9 +13,3 @@ class CompanyPage():
         with tab2:
             ChatBox(symbol)
 
-    def navigate_to_chat(self):
-        print("navtochat")
-        return None
-    
-    def navigate_to_stock(self):
-        return None
