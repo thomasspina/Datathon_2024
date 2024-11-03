@@ -15,10 +15,8 @@ class MainComponent():
             if st.sidebar.button(company, key=f"button_{symbol}"):
                 st.session_state.symbol = symbol
 
-        controls, _ = st.columns([2, 4])
-        with controls:
-            self.add_dashboard_controls()
 
+        self.add_dashboard_controls()
         # Display the main components based on selected symbol
         if "symbol" in st.session_state:
             if StockDataAPI.symbolHasChanged:
