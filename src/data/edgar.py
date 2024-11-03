@@ -10,13 +10,21 @@ import boto3
 import os
 import shutil
 
-def download_recent_sec_directory_to_s3(stock, limit=2):
+def download_recent_sec_directory_to_s3(stock, limit=1):
     dl = Downloader("Datathon2024", "datathon@polymtl.ca")
     dl.get("DEF 14A", stock, limit=limit, download_details=True)
+    dl.get("PRE 14A", stock, limit=limit, download_details=True)
+    dl.get("13F-NT", stock, limit=limit, download_details=True)
+    dl.get("13F-HR", stock, limit=limit, download_details=True)
+    dl.get("13FCONP", stock, limit=limit, download_details=True)
     dl.get("SC 13G", stock, limit=limit, download_details=True)
     dl.get("SC 13D", stock, limit=limit, download_details=True)
     dl.get("10-K", stock, limit=limit, download_details=True)
-    dl.get("8-K", stock, limit=2*limit, download_details=True)
+    dl.get("8-K", stock, limit=limit, download_details=True)
+    dl.get("S-1", stock, limit=limit, download_details=True)
+    dl.get("S-3", stock, limit=limit, download_details=True)
+    dl.get("S-4", stock, limit=limit, download_details=True)
+    
 
     upload_sec_directory_to_s3(stock, f"{stock}")
 
@@ -45,10 +53,47 @@ def upload_sec_directory_to_s3(stock, s3_directory):
                 except Exception as e:
                     print(f"Failed to upload {local_file_path}: {e}")
         
-    shutil.rmtree('./sec-edgar-filings')
+    shutil.rmtree('./sec-edgar-filings', ignore_errors=True)
 
 
 
-download_recent_sec_directory_to_s3("TSLA")
+#download_recent_sec_directory_to_s3("TSLA")
 
 
+# -*- coding: utf-8 -*-
+"""
+
+SEC Filing Scraper
+@author: AdamGetbags
+
+"""
+
+# import modules
+import requests
+import pandas as pd
+
+# create request header
+headers = {'User-Agent': "email@address.com"}
+
+# get all companies data
+companyTickers = requests.get(
+    "https://www.sec.gov/files/company_tickers.json",
+    headers=headers
+    )
+
+# format response to dictionary and get first key/value
+firstEntry = companyTickers.json()['0']
+
+# parse CIK // without leading zeros
+directCik = companyTickers.json()['0']['cik_str']
+
+# dictionary to dataframe
+companyData = pd.DataFrame.from_dict(companyTickers.json(),
+                                     orient='index')
+
+# add leading zeros to CIK
+companyData['cik_str'] = companyData['cik_str'].astype(
+                           str).str.zfill(10)
+
+for ticker in companyData['ticker']:
+    download_recent_sec_directory_to_s3(ticker)
