@@ -1,6 +1,6 @@
 FROM python:3.9-slim
 
-EXPOSE 80
+EXPOSE 8501
 
 WORKDIR /app
 
@@ -12,4 +12,4 @@ COPY ./config ./config
 COPY ./src ./src
 COPY ./main.py ./main.py
 
-ENTRYPOINT ["streamlit", "run", "main.py", "--server.port=80", "--server.address=0.0.0.0"]
+ENTRYPOINT ["streamlit", "run", "main.py", "--server.port=8501", "--server.address=0.0.0.0"]
