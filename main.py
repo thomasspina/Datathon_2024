@@ -9,7 +9,7 @@ class MainComponent():
 
         st.sidebar.title("History")
         for symbol, company in st.session_state.history:
-            if st.sidebar.button(company):
+            if st.sidebar.button(company) or st.session_state.symbol == symbol:
                 self.navigate(symbol)
                 
     
@@ -21,12 +21,11 @@ class MainComponent():
 
     
     def navigate(self, symbol):
-        st.session_state.selected = symbol
+        st.session_state.symbol = symbol
         company.CompanyComponent(symbol, self.update_history)
 
     def update_history(self):
         st.session_state.symbol = st.session_state.symbol_input
-        print(st.session_state.symbol)
         if st.session_state.symbol not in [x for x, _ in st.session_state.history]:
             st.session_state.history.append((st.session_state.symbol, st.session_state.symbol))
 
