@@ -13,17 +13,14 @@ class MainComponent():
             if st.sidebar.button(company, key=f"button_{symbol}"):
                 st.session_state.symbol = symbol
 
-        controls, _ = st.columns([2, 4])
-        with controls:
-            self.add_dashboard_controls()
 
+        self.add_dashboard_controls()
         # Display the main components based on selected symbol
         if "symbol" in st.session_state:
             data, chat, reports = st.tabs(["Financial Analysis", "Chat", "Reports"])
             with data:
                 self.add_dashboard_information()
                 self.add_dashboard_metrics()
-
             with chat:
                 self.add_company_resume()
                 self.add_chat_box()
@@ -59,6 +56,7 @@ class MainComponent():
         pass
 
     def add_dashboard_information(self):
+        st.title("📈 Stock Analysis")
         pass
 
 
