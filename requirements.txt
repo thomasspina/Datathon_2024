@@ -5,4 +5,5 @@ langchain_aws
 langchain
 yfinance
 plotly
-json
+yahoo_fin
+requests_html

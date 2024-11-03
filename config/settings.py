@@ -1,8 +1,5 @@
-import os
-
-# Access environment variables directly
-AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID")
-AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY")
-AWS_DEFAULT_REGION = os.environ.get("AWS_DEFAULT_REGION", "us-west-2")
-AGENT_ID = os.environ.get("AGENT_ID")
-AGENT_ALIAS_ID = os.environ.get("AGENT_ALIAS_ID")
+AWS_ACCESS_KEY_ID = "AKIA3BNTGPX65AXAVA6U"
+AWS_SECRET_ACCESS_KEY = "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"
+AWS_DEFAULT_REGION = "us-west-2"
+AGENT_ID = "OBDOASWNGT"
+AGENT_ALIAS_ID = "6RSQRHKCPT"

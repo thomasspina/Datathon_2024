@@ -50,17 +50,17 @@ def format_response(response):
 def invoke_agent(session_id, prompt):
     try:
         session = boto3.Session(
-            aws_access_key_id="AKIA3BNTGPX65AXAVA6U",
-            aws_secret_access_key="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",
-            region_name="us-west-2",
+            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+            region_name=settings.AWS_DEFAULT_REGION,
         )
         bedrock_runtime = session.client(
             "bedrock-agent-runtime", region_name="us-west-2"
         )
-        # See https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/bedrock-agent-runtime/client/invoke_agent.html
+
         response = bedrock_runtime.invoke_agent(
-            agentId="OBDOASWNGT",
-            agentAliasId="6RSQRHKCPT",
+            agentId=settings.AGENT_ID,
+            agentAliasId=settings.AGENT_ALIAS_ID,
             enableTrace=True,
             sessionId=session_id,
             inputText=prompt,
