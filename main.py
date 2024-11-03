@@ -1,5 +1,7 @@
 import streamlit as st
-import src.models.bedrock_agent as bedrock_agent
+from src.data.stock_data import StockDataAPI
+from src.models.bedrock_agent import BedrockAgent
+import uuid
 
 class MainComponent():
     def __init__(self):
@@ -19,11 +21,25 @@ class MainComponent():
 
         # Display the main components based on selected symbol
         if "symbol" in st.session_state:
+            if StockDataAPI.symbolHasChanged:
+                print('fetching data')
+                StockDataAPI.fetch_yahoo_api(st.session_state.symbol)
+                StockDataAPI.calculate_key_stats()
+                StockDataAPI.parse_news()
+
+                # Making a new session id for the agent
+                BedrockAgent.set_session_id(str(uuid.uuid4()))
+
+                # Feeding the model with the latest news
+                BedrockAgent.ask_claude(f"Here are the latest news titles for the {StockDataAPI.symbol}: {StockDataAPI.news}")
+
+                # Feeding the model with the latest stats
+                BedrockAgent.ask_claude(f"Here are the key stats for the {StockDataAPI.symbol}: {StockDataAPI.key_stats}")
+                StockDataAPI.symbolHasChanged = False
             data, chat, reports = st.tabs(["Financial Analysis", "Chat", "Reports"])
             with data:
                 self.add_dashboard_information()
                 self.add_dashboard_metrics()
-
             with chat:
                 self.add_company_resume()
                 self.add_chat_box()
@@ -40,7 +56,6 @@ class MainComponent():
             st.session_state.messages = []
 
 
-
     def add_dashboard_controls(self):
         st.text_input(
             "Enter Stock Symbol",
@@ -48,9 +63,12 @@ class MainComponent():
             value=st.session_state.symbol,
             on_change=self.update_history,
         ).upper()
+    
 
     def update_history(self):
         st.session_state.symbol = st.session_state.symbol_input
+        StockDataAPI.symbolHasChanged = True
+        print('symbol has changed')
         if st.session_state.symbol not in [x for x, _ in st.session_state.history]:
             st.session_state.history.append((st.session_state.symbol, st.session_state.symbol))
 
@@ -59,8 +77,54 @@ class MainComponent():
         pass
 
     def add_dashboard_information(self):
-        pass
+        
 
+        if not StockDataAPI.key_stats:
+            st.error("Couldn't fetch data for this symbol")
+            return
+        
+        def format_metric(value, format_type='number'):
+            if value is None or value == 'N/A':
+                return "N/A"
+            try:
+                if format_type == 'currency':
+                    return "${:,.0f}".format(value)
+                elif format_type == 'percent':
+                    return "{:.1%}".format(value)
+                else:  # number
+                    return "{:.2f}".format(value)
+            except (ValueError, TypeError):
+                return "N/A"
+        
+        col1, col2, col3, col4 = st.columns(4)
+
+        with col1:
+            st.subheader("Valuation")
+            metrics = StockDataAPI.key_stats["valuation"]
+            st.metric("Market Cap", format_metric(metrics.get('market_cap'), 'currency'))
+            st.metric("P/E Ratio", format_metric(metrics.get('pe_ratio')))
+            st.metric("Price to Book", format_metric(metrics.get('price_to_book')))
+
+        with col2:
+            st.subheader("Financials")
+            metrics = StockDataAPI.key_stats["financials"]
+            st.metric("Revenue", format_metric(metrics.get('revenue'), 'currency'))
+            st.metric("Profit Margin", format_metric(metrics.get('profit_margins'), 'percent'))
+            st.metric("Operating Margin", format_metric(metrics.get('operating_margins'), 'percent'))
+
+        with col3:
+            st.subheader("Shares")
+            metrics = StockDataAPI.key_stats["shares"]
+            st.metric("Shares Outstanding", format_metric(metrics.get('shares_outstanding'), 'currency'))
+            st.metric("Institutional Holdings", format_metric(metrics.get('held_percent_institutions'), 'percent'))
+            st.metric("Insider Holdings", format_metric(metrics.get('held_percent_insiders'), 'percent'))
+
+        with col4:
+            st.subheader("Dividends")
+            metrics = StockDataAPI.key_stats["dividends"]
+            st.metric("Dividend Rate", format_metric(metrics.get('dividend_rate'), 'currency'))
+            st.metric("Dividend Yield", format_metric(metrics.get('dividend_yield'), 'percent'))
+            st.metric("Payout Ratio", format_metric(metrics.get('payout_ratio'), 'percent'))
 
     def add_company_resume(self):
         pass
@@ -92,7 +156,7 @@ class MainComponent():
             # Process assistant's response
             with st.chat_message("assistant"):
                 with st.spinner("Thinking..."):
-                    response = bedrock_agent.ask_claude(st.session_state.get(f"prompt_input_{message_number}"))
+                    response = BedrockAgent.ask_claude(st.session_state.get(f"prompt_input_{message_number}"))
                 st.markdown(response)
                 st.session_state.messages.append({
                     "symbol": st.session_state.symbol, 
