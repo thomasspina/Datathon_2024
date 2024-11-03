@@ -19,7 +19,7 @@ class MainComponent():
 
         # Display the main components based on selected symbol
         if "symbol" in st.session_state:
-            data, chat = st.columns([2, 4])
+            data, chat, reports = st.tabs(["Financial Analysis", "Chat", "Reports"])
             with data:
                 self.add_dashboard_information()
                 self.add_dashboard_metrics()
@@ -27,6 +27,9 @@ class MainComponent():
             with chat:
                 self.add_company_resume()
                 self.add_chat_box()
+
+            with reports:
+                pass
 
     def init_state(self):
         if "symbol" not in st.session_state:
