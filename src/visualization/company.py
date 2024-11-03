@@ -16,10 +16,12 @@ class CompanyComponent():
 
         data, chat = st.columns([2, 4])
         with data:
-            pass
+            self.add_dashboard_information()
+            self.add_dashboard_metrics()
 
         with chat:
-            pass
+            self.add_company_resume()
+            self.add_chat_box()
 
 
 
@@ -37,4 +39,11 @@ class CompanyComponent():
 
 
     def add_dashboard_information(self):
+        pass
+
+
+    def add_company_resume(self):
+        pass
+
+    def add_chat_box(self):
         pass
