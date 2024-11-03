@@ -8,12 +8,12 @@ class MainComponent():
         self.init_state()
         st.set_page_config(page_title="Stock Analysis Tool", layout="wide")
 
-        st.sidebar.title("History")
+        # st.sidebar.title("History")
 
         # Sidebar buttons for company history
-        for symbol, company in st.session_state.history:
-            if st.sidebar.button(company, key=f"button_{symbol}"):
-                st.session_state.symbol = symbol
+        # for symbol, company in st.session_state.history:
+        #     if st.sidebar.button(company, key=f"button_{symbol}"):
+        #         st.session_state.symbol = symbol
 
 
         self.add_dashboard_controls()
