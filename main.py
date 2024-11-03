@@ -16,8 +16,8 @@ class MainPage():
     
     def init_state(self):
         """Initialize session state variables"""
-        st.session_state.selected = "BNC"
-        st.session_state.history = [("AMZN", "Amazon"), ("BNC", "Banque Nationale")]
+        st.session_state.selected = "NA.TO"
+        st.session_state.history = [("AMZN", "Amazon"), ("NA.TO", "Banque Nationale")]
 
     
     def navigate(self, symbol):
