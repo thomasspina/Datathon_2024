@@ -2,7 +2,8 @@ import yfinance as yf
 import pandas as pd
 from datetime import datetime
 from typing import Dict, Any
-from yahoo_fin import stock_info as si
+import pandas as pd
+from typing import Any, Union
 
 
 class StockDataAPI:
@@ -73,7 +74,7 @@ class StockDataAPI:
             except:
                 additional_data["major_holders"] = None
 
-            return additional_data
+            return (additional_data, StockDataAPI.data_to_string(additional_data))
 
         except Exception as e:
             print(f"Error fetching comprehensive stock data: {e}")
@@ -90,7 +91,7 @@ class StockDataAPI:
             income_stmt = stock.income_stmt
             latest_quarter = income_stmt.columns[0] if not income_stmt.empty else None
 
-            return {
+            key_stats ={
                 "valuation": {
                     "market_cap": info.get("marketCap"),
                     "enterprise_value": info.get("enterpriseValue"),
@@ -121,6 +122,8 @@ class StockDataAPI:
                     "payout_ratio": info.get("payoutRatio"),
                 },
             }
+
+            return (key_stats, StockDataAPI.data_to_string(key_stats))
         except Exception as e:
             print(f"Error fetching key stats: {e}")
             return None
@@ -131,8 +134,7 @@ class StockDataAPI:
         try:
             stock = yf.Ticker(symbol)
             info = stock.info
-
-            return {
+            ratings =  {
                 "analyst_price_target": {
                     "current": info.get("currentPrice"),
                     "target_mean": info.get("targetMeanPrice"),
@@ -141,6 +143,7 @@ class StockDataAPI:
                     "number_of_analysts": info.get("numberOfAnalystOpinions"),
                 }
             }
+            return (ratings, StockDataAPI.data_to_string(ratings))
         except Exception as e:
             print(f"Error fetching analyst ratings: {e}")
             return None
@@ -189,36 +192,29 @@ class StockDataAPI:
                 * 100
             )
 
-        return metrics
-    
-    def get_moving_averages(ticker: str, period: str = "1mo") -> str:
-        msft = yf.Ticker(ticker)
-        hist = msft.history(period=period)
-        hist['SMA_20'] = hist['Close'].rolling(window=20).mean()
-        hist['EMA_20'] = hist['Close'].ewm(span=20, adjust=False).mean()
-        return hist[['Close', 'SMA_20', 'EMA_20']].to_string()
+        return (metrics, StockDataAPI.data_to_string(metrics))
 
-    def get_rsi(ticker: str, period: str = "1mo", window = 14) -> str:
-        msft = yf.Ticker(ticker)
-        hist = msft.history(period=period)
-
-        delta = hist['Close'].diff()
-        gain = (delta.where(delta > 0, 0)).rolling(window=window).mean()
-        loss = (-delta.where(delta < 0, 0)).rolling(window=window).mean()
-        rs = gain / loss
-        rsi = 100 - (100 / (1 + rs))
-
-        hist['RSI'] = rsi
-        return hist[['Close', 'RSI']].to_string()
-    
-    def get_dividends_and_splits(ticker: str) -> str:
-        msft = yf.Ticker(ticker)
-        dividends = msft.dividends
-        splits = msft.splits
-        return f"Dividends:\n{dividends}\n\nStock Splits:\n{splits}"
-    
-    def get_analyst_recommendations(ticker: str) -> str:
-        msft = yf.Ticker(ticker)
-        recommendations = msft.recommendations
-        price_targets = msft.analyst_price_targets
-        return f"Analyst Recommendations:\n{recommendations}\n\nAnalyst Price Targets:\n{price_targets}"
+    @staticmethod
+    def data_to_string(data: Union[Dict, pd.DataFrame, list, str, int, float]) -> str:
+        """
+        Convert complex data structures to a string format.
+        Handles nested dicts, lists, DataFrames, and other common types.
+        """
+        if isinstance(data, pd.DataFrame):
+            # Convert DataFrame to a formatted string (limited rows for readability)
+            return data.to_string(max_rows=5, max_cols=5)
+        
+        elif isinstance(data, dict):
+            # Recursively format dictionary items
+            result = []
+            for key, value in data.items():
+                result.append(f"{key}: {StockDataAPI.data_to_string(value)}")
+            return "{\n" + "\n".join(result) + "\n}"
+        
+        elif isinstance(data, list):
+            # Convert each item in the list to a string
+            return "[" + ", ".join(StockDataAPI.data_to_string(item) for item in data) + "]"
+        
+        else:
+            # For basic types (str, int, float), convert directly to string
+            return str(data)

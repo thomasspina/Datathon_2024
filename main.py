@@ -6,7 +6,8 @@ from src.data.stock_data import StockDataAPI
 from src.visualization.dashboard import Dashboard
 from src.models import bedrock_agent
 from src.analysis.technical import TechnicalAnalysis
-
+from src.models.s3_communication import push_file_to_bucket
+from src.models.create_financial_reports import create_financial_report
 
 def init_state():
     """Initialize session state variables"""
@@ -31,7 +32,6 @@ def main():
     with chat_col:
         st.title("💬 Stock Assistant")
 
-        # Chat interface code remains the same...
         for message in st.session_state.messages:
             with st.chat_message(message["role"]):
                 st.markdown(message["content"], unsafe_allow_html=True)
@@ -48,11 +48,6 @@ def main():
                     st.session_state.session_id, prompt
                 )
                 output_text = response["output_text"]
-
-                # Citations handling remains the same...
-                if len(response["citations"]) > 0:
-                    # ... citation code remains the same ...
-                    pass
 
                 placeholder.markdown(output_text, unsafe_allow_html=True)
                 st.session_state.messages.append(
@@ -93,9 +88,9 @@ def main():
                     symbol, start_date, datetime.now().strftime("%Y-%m-%d")
                 )
 
-                if stock_data is not None:
-                    df = stock_data["data"]
-                    stock_info = stock_data["info"]
+                if stock_data[0] is not None:
+                    df = stock_data[0]["data"]
+                    stock_info = stock_data[0]["info"]
 
                     # Calculate metrics
                     metrics = stock_api.calculate_metrics(df)
@@ -105,7 +100,7 @@ def main():
                     signals = technical_analysis.get_signals(df, indicators)
 
                     # Display metrics and signals
-                    dashboard.display_metrics(metrics, signals)
+                    dashboard.display_metrics(metrics[0], signals)
 
                     # Display technical analysis chart
                     st.plotly_chart(
@@ -119,17 +114,17 @@ def main():
                     # Display financial metrics
                     with st.expander("Financial Metrics"):
                         stats = stock_api.get_key_stats(symbol)
-                        if stats:
+                        if stats[0]:
                             col1, col2 = st.columns(2)
                             with col1:
                                 st.write("### Valuation Metrics")
-                                for key, value in stats["valuation"].items():
+                                for key, value in stats[0]["valuation"].items():
                                     st.write(
                                         f"**{key.replace('_', ' ').title()}:** {value}"
                                     )
                             with col2:
                                 st.write("### Financial Metrics")
-                                for key, value in stats["financials"].items():
+                                for key, value in stats[0]["financials"].items():
                                     st.write(
                                         f"**{key.replace('_', ' ').title()}:** {value}"
                                     )
@@ -137,8 +132,8 @@ def main():
                     # Display analyst ratings
                     with st.expander("Analyst Ratings"):
                         ratings = stock_api.get_analyst_ratings(symbol)
-                        if ratings and ratings.get("analyst_price_target"):
-                            pt = ratings["analyst_price_target"]
+                        if ratings[0] and ratings[0].get("analyst_price_target"):
+                            pt = ratings[0]["analyst_price_target"]
                             st.write(f"**Current Price:** ${pt.get('current', 'N/A')}")
                             st.write(
                                 f"**Mean Target:** ${pt.get('target_mean', 'N/A')}"
@@ -182,29 +177,12 @@ def main():
                     )
             
             with chat_col:
-                MA_SA = StockDataAPI.get_moving_averages(symbol)
-                rsi = StockDataAPI.get_rsi(symbol)
-                div = StockDataAPI.get_dividends_and_splits(symbol)
-                rec = StockDataAPI.get_analyst_recommendations(symbol)
-                print(MA_SA)
-                # Send prompt to assistant with stock information
-                prompt = f"""1 - Provide a 3 line summary with important information about the company : {symbol}.
-                2 - next i would like you to lightly comment on this data and include the quality of the stock at this time : 
-                moving average :{MA_SA}
-                rsi data : {rsi}
-                dividents and splits : {div}
-                anaylst recommendations : {rec}"""
-                st.session_state.messages.append({"role": "user", "content": prompt})
                 with st.chat_message("assistant"):
                     placeholder = st.empty()
                     placeholder.markdown("...")
-                    response = bedrock_agent.ask_claude(
-                        prompt
-                    )
+                    response, file_name = create_financial_report(symbol, ratings[1]+stock_data[1]+metrics[1])
                     placeholder.markdown(response, unsafe_allow_html=True)
-                    st.session_state.messages.append(
-                        {"role": "assistant", "content": response}
-                    )
+                    push_file_to_bucket(file_name, f"{symbol}_report")
 
     # Sidebar settings
     # with st.sidebar:

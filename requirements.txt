@@ -7,3 +7,4 @@ yfinance
 plotly
 yahoo_fin
 requests_html
+s3fs
