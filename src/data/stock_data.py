@@ -16,7 +16,6 @@ class StockDataAPI:
 
     @classmethod
     def fetch_yahoo_api(cls, symbol: str):
-        print(f"Fetching data for {symbol}")
         cls.symbol = symbol
         cls.stock = yf.Ticker(symbol)
 

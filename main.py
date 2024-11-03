@@ -20,7 +20,6 @@ class MainComponent():
         # Display the main components based on selected symbol
         if "symbol" in st.session_state:
             if StockDataAPI.symbolHasChanged:
-                print('fetching data')
                 StockDataAPI.fetch_yahoo_api(st.session_state.symbol)
                 StockDataAPI.calculate_key_stats()
                 StockDataAPI.parse_news()
@@ -66,7 +65,6 @@ class MainComponent():
     def update_history(self):
         st.session_state.symbol = st.session_state.symbol_input
         StockDataAPI.symbolHasChanged = True
-        print('symbol has changed')
         if st.session_state.symbol not in [x for x, _ in st.session_state.history]:
             st.session_state.history.append((st.session_state.symbol, st.session_state.symbol))
 
