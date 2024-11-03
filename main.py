@@ -8,9 +8,14 @@ class MainComponent():
         st.set_page_config(page_title="Stock Analysis Tool", layout="wide")
 
         st.sidebar.title("History")
+        controls, _ = st.columns([2, 4])
+        with controls:
+            self.add_dashboard_controls()
+            
         for symbol, company in st.session_state.history:
             if st.sidebar.button(company) or st.session_state.symbol == symbol:
                 self.navigate(symbol)
+
                 
     
     def init_state(self):
@@ -19,14 +24,19 @@ class MainComponent():
         if "history" not in st.session_state:
             st.session_state.history = [("AMZN", "Amazon"), ("NA.TO", "Banque Nationale")]
 
-        # go to where user left off
-        if st.session_state.get("selected"):
-            self.navigate(st.session_state.selected)
-
     
     def navigate(self, symbol):
         st.session_state.symbol = symbol
-        company.CompanyComponent(self.update_history)
+        company.CompanyComponent()
+
+
+    def add_dashboard_controls(self):
+        st.text_input(
+            "Enter Stock Symbol",
+            key="symbol_input",
+            value=st.session_state.symbol,
+            on_change=self.update_history,
+        ).upper()
 
     def update_history(self):
         st.session_state.symbol = st.session_state.symbol_input
