@@ -74,7 +74,7 @@ class StockDataAPI:
             except:
                 additional_data["major_holders"] = None
 
-            return (additional_data, StockDataAPI.data_to_string(additional_data))
+            return additional_data
 
         except Exception as e:
             print(f"Error fetching comprehensive stock data: {e}")
@@ -123,7 +123,7 @@ class StockDataAPI:
                 },
             }
 
-            return (key_stats, StockDataAPI.data_to_string(key_stats))
+            return key_stats
         except Exception as e:
             print(f"Error fetching key stats: {e}")
             return None
@@ -143,7 +143,7 @@ class StockDataAPI:
                     "number_of_analysts": info.get("numberOfAnalystOpinions"),
                 }
             }
-            return (ratings, StockDataAPI.data_to_string(ratings))
+            return ratings
         except Exception as e:
             print(f"Error fetching analyst ratings: {e}")
             return None
@@ -192,7 +192,7 @@ class StockDataAPI:
                 * 100
             )
 
-        return (metrics, StockDataAPI.data_to_string(metrics))
+        return metrics
 
     @staticmethod
     def data_to_string(data: Union[Dict, pd.DataFrame, list, str, int, float]) -> str:

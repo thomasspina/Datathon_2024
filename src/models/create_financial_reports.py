@@ -2,8 +2,8 @@ from src.models import bedrock_agent
 
 def create_financial_report(symbol, stats): 
     prompt = f"""1 - Provide a 3 line summary with important information about the company : {symbol}.
-        2 - next i would like you to lightly comment on this data and include the quality of the stock with usiing Chiffre d'affaires, marge brute, flux de trésorerie libre, dette nette, bénéfice (avant intérêts,
-        impôts, dépréciations et amortissements), bénéfice par action found in these stats : 
+        2 - next i would like you to lightly comment on this data and include the quality of the stock with using:
+        Revenue (or Sales),Gross Margin, Free Cash Flow, Net Debt,Earnings Before Interest, Taxes, Depreciation, and Amortization (EBITDA), Earnings Per Share (EPS)found in these stats : 
         {stats}"""
     
     response = bedrock_agent.ask_claude(
