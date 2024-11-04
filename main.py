@@ -7,6 +7,8 @@ import uuid
 from src.data import edgar
 from src.prompts import prompts as pr
 
+from src.data.buit_graphs import display_cash_flow
+
 class MainComponent():
     def __init__(self):
         self.init_state()
@@ -86,10 +88,12 @@ class MainComponent():
 
 
     def add_dashboard_metrics(self):
-        pass
+        financials = StockDataAPI.get_financials(st.session_state.symbol)
+        display_cash_flow(financials)
+    
 
     def add_dashboard_information(self):
-        
+        st.title("📈 Stock Analysis")
 
         if not StockDataAPI.key_stats:
             st.error("Couldn't fetch data for this symbol")
