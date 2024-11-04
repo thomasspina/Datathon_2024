@@ -1,7 +1,11 @@
+from time import sleep
 import streamlit as st
 from src.data.stock_data import StockDataAPI
 from src.models.bedrock_agent import BedrockAgent
+from config import settings
 import uuid
+from src.data import edgar
+from src.prompts import prompts as pr
 
 class MainComponent():
     def __init__(self):
@@ -19,6 +23,8 @@ class MainComponent():
         self.add_dashboard_controls()
         # Display the main components based on selected symbol
         if "symbol" in st.session_state:
+            # get recent SEC filings for new stock symbol
+
             if StockDataAPI.symbolHasChanged:
                 StockDataAPI.fetch_yahoo_api(st.session_state.symbol)
                 if st.session_state.symbol not in [x for x, _ in st.session_state.history]:
@@ -53,7 +59,7 @@ class MainComponent():
                 self.add_chat_box()
 
             with reports:
-                pass
+                self.generate_reports()
 
     def init_state(self):
         if "symbol" not in st.session_state:
@@ -180,6 +186,17 @@ class MainComponent():
                     "content": response
                 })
 
+    def generate_reports(self):
+        st.title(f"{st.session_state.symbol} Generated Report")
+        
+        with st.spinner("Generating report... this may take a few minutes"):
+            edgar.download_recent_sec_directory_to_s3(st.session_state.symbol)
+
+            # generate board of directors report
+            session_id = str(uuid.uuid4())
+            prompt = f"For this stock {st.session_state.symbol}, do the following: " + pr.get_board_of_directors_prompt()
+            response = BedrockAgent.invoke_agent(session_id, prompt)
+            st.markdown(response)
 
 if __name__ == "__main__":
     MainComponent()

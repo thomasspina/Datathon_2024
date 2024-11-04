@@ -6,5 +6,3 @@ AGENT_ALIAS_ID = "6RSQRHKCPT"
 SEC_BUCKET_NAME = "secfedgar-source"
 KB_ID = "FHFQEPJPA0"
 DS_ID = "WOTXLIBMTP"
-
-sync_finished = False

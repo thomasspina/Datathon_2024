@@ -3,11 +3,13 @@ from sec_edgar_downloader import Downloader
 import boto3
 import os
 import shutil
-import src.models.bedrock_agent as ba
-import threading
+from src.models.bedrock_agent import BedrockAgent as ba
 
 def download_recent_sec_directory_to_s3(stock):
-    settings.sync_finished = False
+    if verify_sec_directory_already_in_s3(stock):
+        print(f"SEC directory for {stock} already exists in S3")
+        return
+    
     dl = Downloader("Datathon2024", "datathon@polymtl.ca")
     dl.get("DEF 14A", stock, limit=1, download_details=True)
     dl.get("DEF 14C", stock, limit=1, download_details=True)
@@ -16,6 +18,7 @@ def download_recent_sec_directory_to_s3(stock):
     dl.get("10-Q", stock, limit=1, download_details=True)
     dl.get("144", stock, limit=1, download_details=True)
     dl.get("SC 13D", stock, limit=1, download_details=True)
+    dl.get("SC 13G", stock, limit=1, download_details=True)
     dl.get("10-K", stock, limit=1, download_details=True)
     dl.get("8-K", stock, limit=1, download_details=True)
     dl.get("3", stock, limit=1, download_details=True)
@@ -24,11 +27,23 @@ def download_recent_sec_directory_to_s3(stock):
     
     upload_sec_directory_to_s3(stock, f"{stock}")
 
-    # Sync the knowledge base with new data
-    thread = threading.Thread(
-        target=ba.sync_knowledge_base
+# verify that the files are not already in the s3 bucket
+def verify_sec_directory_already_in_s3(stock):
+    s3 = boto3.client(
+        's3',
+        region_name=settings.AWS_DEFAULT_REGION,
+        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY
     )
-    thread.start()
+
+    # List all objects in the bucket with the given prefix
+    response = s3.list_objects_v2(Bucket=settings.SEC_BUCKET_NAME, Prefix=f"{stock}/")
+
+    # If the response contains any objects, the directory already exists
+    if 'Contents' in response:
+        return True
+    else:
+        return False
 
 # uploads the files to S3 and cleans up the local directory 
 def upload_sec_directory_to_s3(stock, s3_directory):
@@ -43,8 +58,9 @@ def upload_sec_directory_to_s3(stock, s3_directory):
 
     for root, _, files in os.walk(local_directory):
         for file in files:
-            if file == "primary-document.txt" or file == "primary-document":
+            if file == "primary-document.html" or file == "primary-document" or file == "primary-document.xml":
                 local_file_path = os.path.join(root, file)
+
                 # Create the relative path for S3
                 relative_path = os.path.relpath(local_file_path, local_directory)
                 s3_file_path = os.path.join(s3_directory, relative_path)  # Ensure correct path format for S3

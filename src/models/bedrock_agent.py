@@ -10,76 +10,30 @@ class BedrockAgent:
     aws_region_name = settings.AWS_DEFAULT_REGION
     session_id = None
 
-<<<<<<< HEAD
-    kwargs = {
-    "modelId": "anthropic.claude-3-sonnet-20240229-v1:0",
-    "contentType": "application/json",
-    "accept": "application/json",
-    "body": json.dumps({
-        "anthropic_version": "bedrock-2023-05-31",
-        "max_tokens": 100000,
-        "messages": [
-        {
-            "role": "user",
-            "content": [
-            {
-                "type": "text",
-                "text": prompt
-            }
-            ]
-        }
-        ]
-    })
-    }
-    response = bedrock_runtime.invoke_model(**kwargs)
-    body = json.loads(response['body'].read())
-    formated_body = format_response(body)
-    return formated_body
+    @classmethod
+    def sync_knowledge_base():
+        try:
+            session = boto3.Session(
+                aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+                region_name=settings.AWS_DEFAULT_REGION,
+            )
+            bedrock_agent_client = session.client('bedrock-agent', region_name=settings.AWS_DEFAULT_REGION)
 
-def format_response(response):
-    # Extract and format the content field into a readable string
-    content_list = response.get("content", [])
-    formatted_text = "\n".join([item["text"] for item in content_list if item["type"] == "text"])
-    return formatted_text
+            start_job_response = bedrock_agent_client.start_ingestion_job(knowledgeBaseId = settings.KB_ID, dataSourceId = settings.DS_ID)
+            job = start_job_response["ingestionJob"]
+            
+            return job
 
+        except ClientError as e:
+            raise
 
-def sync_knowledge_base():
-    settings.sync_finished = False
-    try:
-        session = boto3.Session(
-            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-            region_name=settings.AWS_DEFAULT_REGION,
-        )
-        bedrock_agent_client = session.client('bedrock-agent', region_name=settings.AWS_DEFAULT_REGION)
-
-        start_job_response = bedrock_agent_client.start_ingestion_job(knowledgeBaseId = settings.KB_ID, dataSourceId = settings.DS_ID)
-        job = start_job_response["ingestionJob"]
-        while(job['status']!='COMPLETE' ):
-                get_job_response = bedrock_agent_client.get_ingestion_job(
-                    knowledgeBaseId = settings.KB_ID,
-                    dataSourceId = settings.DS_ID,
-                    ingestionJobId = job["ingestionJobId"]
-                )
-                job = get_job_response["ingestionJob"]
-
-        settings.sync_finished = True
-        print("Knowledge Base Synced")
-        return job
-
-    except ClientError as e:
-        raise
-
-def invoke_agent(session_id, prompt):
-    try:
-=======
     @classmethod
     def set_session_id(cls, session_id):
         cls.session_id = session_id
 
     @classmethod
     def talk_to_model(cls, history_messages=[]):
->>>>>>> fac32de98f604982c43298f42c2c0af40d52b82f
         session = boto3.Session(
             aws_access_key_id=cls.aws_access_key_id,
             aws_secret_access_key=cls.aws_secret_access_key,
@@ -110,15 +64,6 @@ def invoke_agent(session_id, prompt):
         #         ]
         #     })
 
-<<<<<<< HEAD
-        full_response = ''
-        for chunk in response['completion']:
-            if 'chunk' in chunk:
-                text = chunk['chunk']['bytes'].decode()
-                full_response += text
-
-        return full_response
-=======
 
 
         kwargs = {
@@ -139,13 +84,9 @@ def invoke_agent(session_id, prompt):
     @classmethod
     def send_news(cls, symbol, news):
         news_prompt = f"Here are the latest news titles for the {symbol}: {news}"
->>>>>>> fac32de98f604982c43298f42c2c0af40d52b82f
 
         st.session_state.messages.append({"role": "user", "content": news_prompt})
 
-<<<<<<< HEAD
-    
-=======
         # Feeding the model with the latest news
         news_response = BedrockAgent.talk_to_model(st.session_state.messages)
         st.session_state.messages.append({
@@ -177,9 +118,9 @@ def invoke_agent(session_id, prompt):
     def invoke_agent(cls, session_id, prompt):
         try:
             session = boto3.Session(
-                aws_access_key_id=cls.aws_access_key_id,
-                aws_secret_access_key=cls.aws_secret_access_key,
-                region_name=cls.aws_region_name,
+                aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+                region_name=settings.AWS_DEFAULT_REGION,
             )
             bedrock_runtime = session.client(
                 "bedrock-agent-runtime", region_name="us-west-2"
@@ -189,7 +130,7 @@ def invoke_agent(session_id, prompt):
                 agentId=settings.AGENT_ID,
                 agentAliasId=settings.AGENT_ALIAS_ID,
                 enableTrace=True,
-                sessionId=cls.session_id,
+                sessionId=session_id,
                 inputText=prompt,
             )
 
@@ -231,5 +172,4 @@ def invoke_agent(session_id, prompt):
         except ClientError as e:
             raise
 
-        return {"output_text": output_text}
->>>>>>> fac32de98f604982c43298f42c2c0af40d52b82f
+        return output_text
