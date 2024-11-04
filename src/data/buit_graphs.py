@@ -153,39 +153,69 @@ class Dashboard:
                 mime="text/csv",
             )
 
+def display_cash_flow(financials: pd.DataFrame):
+    
+    # Define the key metrics to extract from each statement
+    income_metrics = ["Total Revenue", "Net Income", "Diluted EPS"]
+    balance_metrics = ["Net Debt"]
+    cash_flow_metrics = ["Free Cash Flow", "Operating Cash Flow", "Capital Expenditure"]
 
-    @staticmethod
-    def display_cash_flow(df: pd.DataFrame):
-        st.subheader("Cash Flow Chart")
-        cash_flow = {
-            'Free Cash Flow': df['cash_flow'].loc['Free Cash Flow'],
-            'Operating Cash Flow': df['cash_flow'].loc['Operating Cash Flow'],
-            'Net Income From Continuing Operations': df['cash_flow'].loc['Net Income From Continuing Operations'],
-            'Capital Expenditure': df['cash_flow'].loc['Capital Expenditure'],
-        }
+    # Extract the relevant metrics from each financial statement DataFrame
+    income_df = financials["income_statement"].loc[income_metrics]
+    balance_df = financials["balance_sheet"].loc[balance_metrics]
+    cash_flow_df = financials["cash_flow"].loc[cash_flow_metrics]
 
-        income_statement = {
-            'total_revenue' : df['income_statement'].loc['Total Revenue']
-        }
+    st.subheader("Income Statement Metrics")
+    # Convert dates to strings for the x-axis
+    date_strings = income_df.columns.astype(str)
+    fig = go.Figure()
 
-        # Create a new DataFrame for easier plotting
-        cash_flow_df = pd.DataFrame(cash_flow)
-        income_statement_df = pd.DataFrame(income_statement)
-
-        # Plotting
-        fig = go.Figure()
-
-        # Add traces for each selected metric
-        for metric, data in cash_flow_df.items():
-            fig.add_trace(go.Scatter(x=cash_flow_df.index, y=data, mode='lines+markers', name=metric))
-
-        # Update layout
-        fig.update_layout(
-            xaxis_title='Time Period',
-            yaxis_title='Value',
-            legend_title='Metrics',
-            template='plotly_white',
-            height=600
+    for metric in income_df.index:
+        fig.add_trace(
+            go.Bar(
+                x=date_strings,  # Dates as strings
+                y=income_df.loc[metric],  # Metric data for each date
+                name=metric  # Label for the legend
+            )
         )
 
-        return fig
+    fig.update_layout(
+        xaxis_title="Date",
+        yaxis_title="Value",
+        barmode="group",
+        legend_title="Metrics",
+        template="plotly_dark"
+    )
+    st.plotly_chart(fig)
+    st.dataframe(income_df)
+
+    # Display Balance Sheet Metrics
+    st.subheader("Balance Sheet Metrics")
+    st.dataframe(balance_df)
+
+    # Display Cash Flow Metrics
+    st.subheader("Cash Flow Metrics")
+
+    cash_fig = go.Figure()
+
+    for metric in cash_flow_metrics:
+        cash_fig.add_trace(
+            go.Bar(
+                x=date_strings,  # Dates as strings
+                y=cash_flow_df.loc[metric],  # Metric data for each date
+                name=metric  # Label for the legend
+            )
+        )
+
+    # Update layout for the cash flow metrics plot
+    cash_fig.update_layout(
+        title="Cash Flow Metrics Over Years",
+        xaxis_title="Date",
+        yaxis_title="Value",
+        barmode="group",
+        legend_title="Metrics",
+        template="plotly_dark"
+    )
+    st.plotly_chart(cash_fig)
+    st.dataframe(cash_flow_df)
+    return 

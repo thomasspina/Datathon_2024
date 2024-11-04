@@ -1,9 +1,9 @@
 import streamlit as st
-import src.models.bedrock_agent as bedrock_agent
 from src.data.stock_data import StockDataAPI
-from src.analysis.technical import TechnicalAnalysis
-from src.data.buit_graphs import Dashboard
-from datetime import datetime, timedelta
+from src.models.bedrock_agent import BedrockAgent
+import uuid
+
+from src.data.buit_graphs import display_cash_flow
 
 class MainComponent():
     def __init__(self):
@@ -21,6 +21,31 @@ class MainComponent():
         self.add_dashboard_controls()
         # Display the main components based on selected symbol
         if "symbol" in st.session_state:
+            if StockDataAPI.symbolHasChanged:
+                StockDataAPI.fetch_yahoo_api(st.session_state.symbol)
+                if st.session_state.symbol not in [x for x, _ in st.session_state.history]:
+                    if StockDataAPI.stock.info.get("longName") is None:
+                        st.error("Couldn't fetch data for this symbol")
+                        return
+                    
+                    name = StockDataAPI.stock.info["longName"]
+                    st.session_state.history.append((st.session_state.symbol, name))
+                    st.sidebar.button(
+                        name,
+                        key=f"button_{st.session_state.symbol}"
+                    )
+
+                StockDataAPI.calculate_key_stats()
+                StockDataAPI.parse_news()
+                st.session_state.messages = []
+                # Making a new session id for the agent
+                BedrockAgent.set_session_id(str(uuid.uuid4()))
+
+                BedrockAgent.send_news(StockDataAPI.symbol, StockDataAPI.news)
+
+                BedrockAgent.send_stats(StockDataAPI.symbol, StockDataAPI.key_stats)
+                
+                StockDataAPI.symbolHasChanged = False
             data, chat, reports = st.tabs(["Financial Analysis", "Chat", "Reports"])
             with data:
                 self.add_dashboard_information()
@@ -39,7 +64,7 @@ class MainComponent():
             st.session_state.history = [("AMZN", "Amazon"), ("NA.TO", "Banque Nationale")]
         if "messages" not in st.session_state:
             st.session_state.messages = []
-
+            
 
 
     def add_dashboard_controls(self):
@@ -49,113 +74,67 @@ class MainComponent():
             value=st.session_state.symbol,
             on_change=self.update_history,
         ).upper()
+    
 
     def update_history(self):
         st.session_state.symbol = st.session_state.symbol_input
-        if st.session_state.symbol not in [x for x, _ in st.session_state.history]:
-            st.session_state.history.append((st.session_state.symbol, st.session_state.symbol))
+        StockDataAPI.symbolHasChanged = True
 
 
     def add_dashboard_metrics(self):
-
-        st.title("📈 Stock Analysis")
-
-        start_date = st.date_input(
-            "Select Start Date", value=datetime.now() - timedelta(days=730)
-        )
-
-        # Initialize components
-        stock_api = StockDataAPI()
-        technical_analysis = TechnicalAnalysis()
-        dashboard = Dashboard()
-
-        # Fetch and display data
-        if st.session_state.symbol:
-            with st.spinner("Fetching stock data..."):
-                # Get comprehensive stock data
-                stock_data = stock_api.fetch_stock_data_with_indicators(
-                    st.session_state.symbol, start_date, datetime.now()
-                )
-
-                if stock_data is not None:
-                    df = stock_data["data"]
-                    stock_info = stock_data["info"]
-                    financials = stock_data['financials']
-
-                    dashboard.display_company_info(stock_info)
-
-                    # Calculate metrics
-                    metrics = stock_api.calculate_metrics(df)
-
-                    # Calculate technical indicators
-                    indicators = technical_analysis.calculate_all_indicators(df)
-                    signals = technical_analysis.get_signals(df, indicators)
-
-                    # Display metrics and signals
-                    dashboard.display_metrics(metrics, signals)
-
-                    # Display cash flow
-                    st.plotly_chart(dashboard.display_cash_flow(financials))
-
-                    # Display technical analysis chart
-                    st.plotly_chart(
-                        dashboard.create_technical_chart(df, indicators),
-                        use_container_width=True,
-                    )
-
-                    # Display financial metrics
-                    with st.expander("Financial Metrics"):
-                        stats = stock_api.get_key_stats(st.session_state.symbol)
-                        if stats:
-                            col1, col2 = st.columns(2)
-                            with col1:
-                                st.write("### Valuation Metrics")
-                                for key, value in stats["valuation"].items():
-                                    st.write(
-                                        f"**{key.replace('_', ' ').title()}:** {value}"
-                                    )
-                            with col2:
-                                st.write("### Financial Metrics")
-                                for key, value in stats["financials"].items():
-                                    st.write(
-                                        f"**{key.replace('_', ' ').title()}:** {value}"
-                                    )
-
-                    # Display raw data
-                    dashboard.display_raw_data(df, st.session_state.symbol)
-
-                    # Technical Analysis Details
-                    with st.expander("Technical Analysis Details"):
-                        st.write("### Current Indicator Values")
-                        detail_col1, detail_col2 = st.columns(2)
-
-                        with detail_col1:
-                            st.write(f"**RSI (14):** {indicators['RSI'].iloc[-1]:.2f}")
-                            st.write(f"**MACD:** {indicators['MACD'].iloc[-1]:.2f}")
-                            st.write(
-                                f"**Signal Line:** {indicators['Signal_Line'].iloc[-1]:.2f}"
-                            )
-
-                        with detail_col2:
-                            st.write(
-                                f"**20-day SMA:** ${indicators['SMA_20'].iloc[-1]:.2f}"
-                            )
-                            st.write(
-                                f"**50-day SMA:** ${indicators['SMA_50'].iloc[-1]:.2f}"
-                            )
-                            st.write(
-                                f"**200-day SMA:** ${indicators['SMA_200'].iloc[-1]:.2f}"
-                            )
-                else:
-                    st.error(
-                        "Failed to fetch stock data. Please check the symbol and try again."
-                    )
-        pass
+        financials = StockDataAPI.get_financials(st.session_state.symbol)
+        display_cash_flow(financials)
+    
 
     def add_dashboard_information(self):
+        st.title("📈 Stock Analysis")
 
-        pass
+        if not StockDataAPI.key_stats:
+            st.error("Couldn't fetch data for this symbol")
+            return
+        
+        def format_metric(value, format_type='number'):
+            if value is None or value == 'N/A':
+                return "N/A"
+            try:
+                if format_type == 'currency':
+                    return "${:,.0f}".format(value)
+                elif format_type == 'percent':
+                    return "{:.1%}".format(value)
+                else:  # number
+                    return "{:.2f}".format(value)
+            except (ValueError, TypeError):
+                return "N/A"
+        
+        col1, col2, col3, col4 = st.columns(4)
 
+        with col1:
+            st.subheader("Valuation")
+            metrics = StockDataAPI.key_stats["valuation"]
+            st.metric("Market Cap", format_metric(metrics.get('market_cap'), 'currency'))
+            st.metric("P/E Ratio", format_metric(metrics.get('pe_ratio')))
+            st.metric("Price to Book", format_metric(metrics.get('price_to_book')))
+
+        with col2:
+            st.subheader("Financials")
+            metrics = StockDataAPI.key_stats["financials"]
+            st.metric("Revenue", format_metric(metrics.get('revenue'), 'currency'))
+            st.metric("Profit Margin", format_metric(metrics.get('profit_margins'), 'percent'))
+            st.metric("Operating Margin", format_metric(metrics.get('operating_margins'), 'percent'))
+
+        with col3:
+            st.subheader("Shares")
+            metrics = StockDataAPI.key_stats["shares"]
+            st.metric("Shares Outstanding", format_metric(metrics.get('shares_outstanding'), 'currency'))
+            st.metric("Institutional Holdings", format_metric(metrics.get('held_percent_institutions'), 'percent'))
+            st.metric("Insider Holdings", format_metric(metrics.get('held_percent_insiders'), 'percent'))
+
+        with col4:
+            st.subheader("Dividends")
+            metrics = StockDataAPI.key_stats["dividends"]
+            st.metric("Dividend Rate", format_metric(metrics.get('dividend_rate'), 'currency'))
+            st.metric("Dividend Yield", format_metric(metrics.get('dividend_yield'), 'percent'))
+            st.metric("Payout Ratio", format_metric(metrics.get('payout_ratio'), 'percent'))
 
     def add_company_resume(self):
         pass
@@ -163,42 +142,47 @@ class MainComponent():
     def add_chat_box(self):
         st.title("💬 Stock Assistant")
 
-        # Display existing messages for the current symbol
-        for message in st.session_state.messages:
-            if message["symbol"] == st.session_state.symbol:
-                with st.chat_message(message["role"]):
-                    st.markdown(message["content"])
+        # Get messages for current symbol
+        # symbol_messages = [
+        #     msg for msg in st.session_state.messages 
+        #     if msg["symbol"] == st.session_state.symbol
+        # ]
+        
+        # Display existing messages
+        for message in st.session_state.messages :
+            with st.chat_message(message["role"]):
+                st.markdown(message["content"])
 
-        message_number = [x["symbol"] for x in st.session_state.messages].count(st.session_state.symbol)
+        message_number = len(st.session_state.messages)
 
-        # Check if there is a new input from the chat input box
-        if st.session_state.get(f"prompt_input_{message_number}"):
-            # Add user message to session state
-            st.session_state.messages.append({
-                "symbol": st.session_state.symbol, 
-                "role": "user",
-                "content": st.session_state.get(f"prompt_input_{message_number}"),
-            })
-
-            # Display user message in chat
+        # Handle new messages
+        if prompt := st.chat_input("What is up?", key=f"prompt_input_{message_number}"):
+            st.session_state.messages.append({"role": "user", "content": prompt})
+            # Display user message
             with st.chat_message("user"):
-                st.markdown(st.session_state.get(f"prompt_input_{message_number}"))
+                st.markdown(prompt)
+            
+            # Add to session state
+            
+            # Get chat history for context
+            # chat_history = [
+            #     {"role": msg["role"], "content": [{"type": "text", "text": msg["content"]}]}
+            #     for msg in symbol_messages
+            # ]
 
-            # Process assistant's response
+            # Get assistant response
             with st.chat_message("assistant"):
                 with st.spinner("Thinking..."):
-                    response = bedrock_agent.ask_claude(st.session_state.get(f"prompt_input_{message_number}"))
+                    response = BedrockAgent.talk_to_model(st.session_state.messages)
                 st.markdown(response)
+
+                
+                
+                # Add to session state
                 st.session_state.messages.append({
-                    "symbol": st.session_state.symbol, 
                     "role": "assistant",
-                    "content": response,
+                    "content": response
                 })
-
-            # Clear the input field after processing
-            st.session_state.prompt_input = ""
-
-        st.chat_input("What is up?", key=f"prompt_input_{message_number}")
 
 
 if __name__ == "__main__":
