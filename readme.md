@@ -42,14 +42,14 @@ Start the server
 
 To run this project, you will need to add these variables to config/settings.py
 
-`AWS_ACCESS_KEY_ID`
-`AWS_SECRET_ACCESS_KEY`
-`AWS_DEFAULT_REGION`
-`AGENT_ID` = your bedrock agent id that is connected to your data source
-`AGENT_ALIAS_ID`
-`SEC_BUCKET_NAME` = the bucket in which you want to put the SEC filings
-`KB_ID` = the knowledge base id that is connected to your S3 bucket
-`DS_ID` = your data source id in your knowledge base that is connected to your S3
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+- `AWS_DEFAULT_REGION`
+- `AGENT_ID` = your bedrock agent id that is connected to your data source
+- `AGENT_ALIAS_ID`
+- `SEC_BUCKET_NAME` = the bucket in which you want to put the SEC filings
+- `KB_ID` = the knowledge base id that is connected to your S3 bucket
+- `DS_ID` = your data source id in your knowledge base that is connected to your S3
 
 ## Tech Stack
 
