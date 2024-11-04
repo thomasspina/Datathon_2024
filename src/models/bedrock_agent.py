@@ -1,8 +1,6 @@
 import boto3
 from botocore.exceptions import ClientError
-import os
 import json
-import pandas as pd
 from config import settings
 import streamlit as st
 
@@ -11,6 +9,24 @@ class BedrockAgent:
     aws_secret_access_key = settings.AWS_SECRET_ACCESS_KEY
     aws_region_name = settings.AWS_DEFAULT_REGION
     session_id = None
+
+    @classmethod
+    def sync_knowledge_base():
+        try:
+            session = boto3.Session(
+                aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+                region_name=settings.AWS_DEFAULT_REGION,
+            )
+            bedrock_agent_client = session.client('bedrock-agent', region_name=settings.AWS_DEFAULT_REGION)
+
+            start_job_response = bedrock_agent_client.start_ingestion_job(knowledgeBaseId = settings.KB_ID, dataSourceId = settings.DS_ID)
+            job = start_job_response["ingestionJob"]
+            
+            return job
+
+        except ClientError as e:
+            raise
 
     @classmethod
     def set_session_id(cls, session_id):
@@ -102,9 +118,9 @@ class BedrockAgent:
     def invoke_agent(cls, session_id, prompt):
         try:
             session = boto3.Session(
-                aws_access_key_id=cls.aws_access_key_id,
-                aws_secret_access_key=cls.aws_secret_access_key,
-                region_name=cls.aws_region_name,
+                aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+                region_name=settings.AWS_DEFAULT_REGION,
             )
             bedrock_runtime = session.client(
                 "bedrock-agent-runtime", region_name="us-west-2"
@@ -114,7 +130,7 @@ class BedrockAgent:
                 agentId=settings.AGENT_ID,
                 agentAliasId=settings.AGENT_ALIAS_ID,
                 enableTrace=True,
-                sessionId=cls.session_id,
+                sessionId=session_id,
                 inputText=prompt,
             )
 
@@ -156,4 +172,4 @@ class BedrockAgent:
         except ClientError as e:
             raise
 
-        return {"output_text": output_text}
+        return output_text
