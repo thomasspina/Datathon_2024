@@ -1,7 +1,11 @@
 boto3
 awscli
 streamlit
+streamlit-aggrid
 langchain_aws
 langchain
 yfinance
 plotly
+yahoo_fin
+requests_html
+s3fs
