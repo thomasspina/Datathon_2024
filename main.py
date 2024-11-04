@@ -149,13 +149,6 @@ class MainComponent():
 
     def add_chat_box(self):
         st.title("💬 Stock Assistant")
-
-        # Get messages for current symbol
-        # symbol_messages = [
-        #     msg for msg in st.session_state.messages 
-        #     if msg["symbol"] == st.session_state.symbol
-        # ]
-        
         # Display existing messages
         for message in st.session_state.messages :
             with st.chat_message(message["role"]):
@@ -164,19 +157,12 @@ class MainComponent():
         message_number = len(st.session_state.messages)
 
         # Handle new messages
-        if prompt := st.chat_input("What is up?", key=f"prompt_input_{message_number}"):
+        if prompt := st.chat_input("Any questions?", key=f"prompt_input_{message_number}"):
             st.session_state.messages.append({"role": "user", "content": prompt})
             # Display user message
             with st.chat_message("user"):
                 st.markdown(prompt)
             
-            # Add to session state
-            
-            # Get chat history for context
-            # chat_history = [
-            #     {"role": msg["role"], "content": [{"type": "text", "text": msg["content"]}]}
-            #     for msg in symbol_messages
-            # ]
 
             # Get assistant response
             with st.chat_message("assistant"):

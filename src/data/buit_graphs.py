@@ -7,12 +7,11 @@ def display_cash_flow(financials: pd.DataFrame):
     
     # Define the key metrics to extract from each statement
     income_metrics = ["Total Revenue", "Net Income", "Diluted EPS"]
-    balance_metrics = ["Net Debt"]
     cash_flow_metrics = ["Free Cash Flow", "Operating Cash Flow", "Capital Expenditure"]
 
     # Extract the relevant metrics from each financial statement DataFrame
     income_df = financials["income_statement"].loc[income_metrics]
-    balance_df = financials["balance_sheet"].loc[balance_metrics]
+    balance_df = financials["balance_sheet"]
     cash_flow_df = financials["cash_flow"].loc[cash_flow_metrics]
 
     st.subheader("Income Statement Metrics")
