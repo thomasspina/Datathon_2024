@@ -60,7 +60,7 @@ class MainComponent():
         if "symbol" not in st.session_state:
             st.session_state.symbol = "NA.TO"
         if "history" not in st.session_state:
-            st.session_state.history = [("AMZN", "Amazon"), ("NA.TO", "Banque Nationale")]
+            st.session_state.history = [("AMZN", "Amazon.com, Inc."), ("NA.TO", "National Bank of Canada")]
         if "messages" not in st.session_state:
             st.session_state.messages = []
 
