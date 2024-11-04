@@ -269,7 +269,7 @@ def display_compare(df):
     fig.update_layout(
         title='Comparison of Companies in same industry',
         xaxis_title='Companies',
-        yaxis_title='Value',
+        yaxis_title='YTD Return',
         barmode='group',
         legend_title='Metrics',
         template='plotly_dark'
