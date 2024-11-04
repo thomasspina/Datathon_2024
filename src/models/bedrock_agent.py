@@ -4,6 +4,7 @@ import os
 import json
 import pandas as pd
 from config import settings
+import streamlit as st
 
 class BedrockAgent:
     aws_access_key_id = settings.AWS_ACCESS_KEY_ID
@@ -16,7 +17,7 @@ class BedrockAgent:
         cls.session_id = session_id
 
     @classmethod
-    def ask_claude(cls, prompt):
+    def talk_to_model(cls, history_messages=[]):
         session = boto3.Session(
             aws_access_key_id=cls.aws_access_key_id,
             aws_secret_access_key=cls.aws_secret_access_key,
@@ -26,6 +27,29 @@ class BedrockAgent:
             "bedrock-runtime", region_name="us-west-2"
         )
 
+        # if len(history_messages) == 0:
+        #     history_messages = [{
+        #     "role": "user",
+        #     "content": [
+        #         {
+        #             "type": "text",
+        #             "text": prompt
+        #         }
+        #         ]
+        #     }]
+        # else:
+        #     history_messages.append({
+        #     "role": "user",
+        #     "content": [
+        #         {
+        #             "type": "text",
+        #             "text": prompt
+        #         }
+        #         ]
+        #     })
+
+
+
         kwargs = {
         "modelId": "anthropic.claude-3-sonnet-20240229-v1:0",
         "contentType": "application/json",
@@ -33,24 +57,39 @@ class BedrockAgent:
         "body": json.dumps({
             "anthropic_version": "bedrock-2023-05-31",
             "max_tokens": 1000,
-            "messages": [
-            {
-                "role": "user",
-                "content": [
-                {
-                    "type": "text",
-                    "text": prompt
-                }
-                ]
-            }
-            ]
+            "messages": history_messages
         })
         }
-        print('asking claude with: ', cls.session_id)
         response = bedrock_runtime.invoke_model(**kwargs)
         body = json.loads(response['body'].read())
         formated_body = cls.format_response(body)
         return formated_body
+    
+    @classmethod
+    def send_news(cls, symbol, news):
+        news_prompt = f"Here are the latest news titles for the {symbol}: {news}"
+
+        st.session_state.messages.append({"role": "user", "content": news_prompt})
+
+        # Feeding the model with the latest news
+        news_response = BedrockAgent.talk_to_model(st.session_state.messages)
+        st.session_state.messages.append({
+                            "role": "assistant",
+                            "content": news_response
+                        })
+                
+
+    @classmethod
+    def send_stats(cls, symbol, stats):
+        stats_prompt = f"Here are the key stats for the {symbol}: {stats}"
+
+        st.session_state.messages.append({"role": "user", "content": stats_prompt})
+        # Feeding the model with the latest stats
+        stats_response = BedrockAgent.talk_to_model(st.session_state.messages)
+        st.session_state.messages.append({
+            "role": "assistant",
+            "content": stats_response
+        })
 
     @classmethod
     def format_response(cls, response):
