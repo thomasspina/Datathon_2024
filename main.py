@@ -8,12 +8,12 @@ class MainComponent():
         self.init_state()
         st.set_page_config(page_title="Stock Analysis Tool", layout="wide")
 
-        # st.sidebar.title("History")
+        st.sidebar.title("History")
 
         # Sidebar buttons for company history
-        # for symbol, company in st.session_state.history:
-        #     if st.sidebar.button(company, key=f"button_{symbol}"):
-        #         st.session_state.symbol = symbol
+        for symbol, company in st.session_state.history:
+            if st.sidebar.button(company, key=f"button_{symbol}"):
+                st.session_state.symbol = symbol
 
 
         self.add_dashboard_controls()
@@ -21,6 +21,18 @@ class MainComponent():
         if "symbol" in st.session_state:
             if StockDataAPI.symbolHasChanged:
                 StockDataAPI.fetch_yahoo_api(st.session_state.symbol)
+                if st.session_state.symbol not in [x for x, _ in st.session_state.history]:
+                    if StockDataAPI.stock.info.get("longName") is None:
+                        st.error("Couldn't fetch data for this symbol")
+                        return
+                    
+                    name = StockDataAPI.stock.info["longName"]
+                    st.session_state.history.append((st.session_state.symbol, name))
+                    st.sidebar.button(
+                        name,
+                        key=f"button_{st.session_state.symbol}"
+                    )
+
                 StockDataAPI.calculate_key_stats()
                 StockDataAPI.parse_news()
                 st.session_state.messages = []
@@ -65,8 +77,6 @@ class MainComponent():
     def update_history(self):
         st.session_state.symbol = st.session_state.symbol_input
         StockDataAPI.symbolHasChanged = True
-        if st.session_state.symbol not in [x for x, _ in st.session_state.history]:
-            st.session_state.history.append((st.session_state.symbol, st.session_state.symbol))
 
 
     def add_dashboard_metrics(self):
