@@ -80,9 +80,9 @@ class StockDataAPI:
             print(f"Error fetching key stats: {e}")
             return None
 
-    @staticmethod
-    def get_financials(ticker: str):
-        stock = yf.Ticker(ticker)
+    @classmethod
+    def get_financials(cls):
+        stock = yf.Ticker(cls.symbol)
         financials = {
             "income_statement": stock.income_stmt,
             "balance_sheet": stock.balance_sheet,
@@ -92,6 +92,16 @@ class StockDataAPI:
             "quarterly_cash_flow": stock.quarterly_cash_flow,
         }
         return financials
+    
+    @classmethod
+    def get_industry_info(cls):
+        # Ticker to Sector and Industry
+        ticker = yf.Ticker(cls.symbol)
+        sectorKey = yf.Sector(ticker.info.get('sectorKey'))
+        industryKey = yf.Industry(ticker.info.get('industryKey'))
+
+        return industryKey.top_growth_companies
+        
 
     # @staticmethod
     # def fetch_stock_data_with_indicators(

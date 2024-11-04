@@ -7,7 +7,7 @@ import uuid
 from src.data import edgar
 from src.prompts import prompts as pr
 
-from src.data.buit_graphs import display_cash_flow
+from src.data.buit_graphs import display_cash_flow, display_compare
 
 class MainComponent():
     def __init__(self):
@@ -88,8 +88,10 @@ class MainComponent():
 
 
     def add_dashboard_metrics(self):
-        financials = StockDataAPI.get_financials(st.session_state.symbol)
+        financials = StockDataAPI.get_financials()
         display_cash_flow(financials)
+        industry = StockDataAPI.get_industry_info()
+        display_compare(industry)
     
 
     def add_dashboard_information(self):
