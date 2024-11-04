@@ -35,15 +35,14 @@ class MainComponent():
 
                 StockDataAPI.calculate_key_stats()
                 StockDataAPI.parse_news()
-
+                st.session_state.messages = []
                 # Making a new session id for the agent
                 BedrockAgent.set_session_id(str(uuid.uuid4()))
 
-                # Feeding the model with the latest news
-                BedrockAgent.ask_claude(f"Here are the latest news titles for the {StockDataAPI.symbol}: {StockDataAPI.news}")
+                BedrockAgent.send_news(StockDataAPI.symbol, StockDataAPI.news)
 
-                # Feeding the model with the latest stats
-                BedrockAgent.ask_claude(f"Here are the key stats for the {StockDataAPI.symbol}: {StockDataAPI.key_stats}")
+                BedrockAgent.send_stats(StockDataAPI.symbol, StockDataAPI.key_stats)
+                
                 StockDataAPI.symbolHasChanged = False
             data, chat, reports = st.tabs(["Financial Analysis", "Chat", "Reports"])
             with data:
@@ -63,6 +62,7 @@ class MainComponent():
             st.session_state.history = [("AMZN", "Amazon.com, Inc."), ("NA.TO", "National Bank of Canada")]
         if "messages" not in st.session_state:
             st.session_state.messages = []
+            
 
 
     def add_dashboard_controls(self):
@@ -138,42 +138,47 @@ class MainComponent():
     def add_chat_box(self):
         st.title("💬 Stock Assistant")
 
-        # Display existing messages for the current symbol
-        for message in st.session_state.messages:
-            if message["symbol"] == st.session_state.symbol:
-                with st.chat_message(message["role"]):
-                    st.markdown(message["content"])
+        # Get messages for current symbol
+        # symbol_messages = [
+        #     msg for msg in st.session_state.messages 
+        #     if msg["symbol"] == st.session_state.symbol
+        # ]
+        
+        # Display existing messages
+        for message in st.session_state.messages :
+            with st.chat_message(message["role"]):
+                st.markdown(message["content"])
 
-        message_number = [x["symbol"] for x in st.session_state.messages].count(st.session_state.symbol)
+        message_number = len(st.session_state.messages)
 
-        # Check if there is a new input from the chat input box
-        if st.session_state.get(f"prompt_input_{message_number}"):
-            # Add user message to session state
-            st.session_state.messages.append({
-                "symbol": st.session_state.symbol, 
-                "role": "user",
-                "content": st.session_state.get(f"prompt_input_{message_number}"),
-            })
-
-            # Display user message in chat
+        # Handle new messages
+        if prompt := st.chat_input("What is up?", key=f"prompt_input_{message_number}"):
+            st.session_state.messages.append({"role": "user", "content": prompt})
+            # Display user message
             with st.chat_message("user"):
-                st.markdown(st.session_state.get(f"prompt_input_{message_number}"))
+                st.markdown(prompt)
+            
+            # Add to session state
+            
+            # Get chat history for context
+            # chat_history = [
+            #     {"role": msg["role"], "content": [{"type": "text", "text": msg["content"]}]}
+            #     for msg in symbol_messages
+            # ]
 
-            # Process assistant's response
+            # Get assistant response
             with st.chat_message("assistant"):
                 with st.spinner("Thinking..."):
-                    response = BedrockAgent.ask_claude(st.session_state.get(f"prompt_input_{message_number}"))
+                    response = BedrockAgent.talk_to_model(st.session_state.messages)
                 st.markdown(response)
+
+                
+                
+                # Add to session state
                 st.session_state.messages.append({
-                    "symbol": st.session_state.symbol, 
                     "role": "assistant",
-                    "content": response,
+                    "content": response
                 })
-
-            # Clear the input field after processing
-            st.session_state.prompt_input = ""
-
-        st.chat_input("What is up?", key=f"prompt_input_{message_number}")
 
 
 if __name__ == "__main__":
