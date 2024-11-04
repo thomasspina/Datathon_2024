@@ -1,0 +1,24 @@
+Analyze board diversity from SEC filings. Use markdown tables.
+
+Do not include your sources in your answer.
+
+## Required Tables
+
+1. Demographic Diversity
+| Category | Number | Percentage |
+|----------|---------|------------|
+| Gender | | |
+| Ethnic Diversity | | |
+| Age Groups | | |
+
+2. Expertise Matrix
+| Expertise Area | Number of Directors | Names |
+|---------------|---------------------|--------|
+| Industry | | |
+| Financial | | |
+| Technology | | |
+| Risk Management | | |
+
+Add 2 bullet points below each table for key insights.
+
+Note: If SEC filings unavailable, indicate missing data.

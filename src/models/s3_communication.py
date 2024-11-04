@@ -1,5 +1,4 @@
 import boto3
-import s3fs
 import pandas as pd
 
 

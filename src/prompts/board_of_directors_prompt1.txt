@@ -1,0 +1,24 @@
+For the company stated at the beginning, create a board composition analysis using SEC filings. 
+Do not include sources in your answer.
+You must format your response in markdown with tables.
+
+## Required Tables
+
+1. Board Overview
+| Metric | Value |
+|--------|--------|
+| Total Board Members | |
+| Independent Directors | |
+| Board Leadership | |
+| Average Tenure | |
+| Average Age | |
+
+2. Director Details
+| Director Name | Role | Since | Background | Committees |
+|--------------|------|-------|------------|------------|
+
+3. Summary Points
+- List 3 key strengths
+- List 3 main concerns
+
+Note: If SEC filings unavailable, indicate missing data.

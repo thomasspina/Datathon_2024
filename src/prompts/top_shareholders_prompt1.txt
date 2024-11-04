@@ -1,0 +1,23 @@
+Create a major shareholders analysis from SEC filings using markdown tables.
+Do not include your sources in your answer.
+
+## Required Tables
+
+1. Top Shareholders Summary
+| Shareholder | Shares | % Owned | Filing Date | Change | Type |
+|------------|---------|---------|-------------|--------|------|
+[Include top 10 holders]
+
+2. Filing Analysis
+| Filing Type | Count | Total Shares | % of Outstanding |
+|------------|--------|--------------|------------------|
+| 13F | | | |
+| 13G | | | |
+| 13D | | | |
+
+Key Points:
+- List major changes
+- Note filing dates
+- Highlight significant moves
+
+Note: If SEC filings unavailable, indicate missing data.

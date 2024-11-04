@@ -1,0 +1,34 @@
+Create a comprehensive shareholder analysis report using SEC filings.
+Follow these specific guidelines:
+# Format Requirements:
+- Use markdown formatting throughout the report
+- Include clear section headers and subheadings
+- Use tables where appropriate for comparing data
+- Use bullet points for listing key findings
+# Required Sections:
+1. Summary Table of Major Shareholders:
+- Shareholder name
+- Shares held and percentage
+- Filing type and date
+- Change from previous filing
+- Investment purpose (passive/active)
+2. Key Shareholders Analysis:
+For each major holder include:
+- Entity type (hedge fund, mutual fund, etc.)
+- Investment history
+- Voting power
+- Special rights/agreements
+- Notable changes
+3. Ownership Structure:
+- Top 5/10 holder percentages
+- Institutional vs. individual breakdown
+- Insider ownership
+- Float analysis
+4. Risk Assessment:
+- Ownership concentration
+- Control implications
+- Block sale risks
+- Activist positions
+Cite specific filing references when making observtions.
+End with key observations about shareholder structure stability.
+

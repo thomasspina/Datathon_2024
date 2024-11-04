@@ -1,6 +1,7 @@
 boto3
 awscli
 streamlit
+streamlit-aggrid
 langchain_aws
 langchain
 yfinance
