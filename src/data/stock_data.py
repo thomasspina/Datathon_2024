@@ -194,27 +194,48 @@ class StockDataAPI:
 
         return metrics
 
-    @staticmethod
-    def data_to_string(data: Union[Dict, pd.DataFrame, list, str, int, float]) -> str:
-        """
-        Convert complex data structures to a string format.
-        Handles nested dicts, lists, DataFrames, and other common types.
-        """
-        if isinstance(data, pd.DataFrame):
-            # Convert DataFrame to a formatted string (limited rows for readability)
-            return data.to_string(max_rows=5, max_cols=5)
-        
-        elif isinstance(data, dict):
-            # Recursively format dictionary items
-            result = []
-            for key, value in data.items():
-                result.append(f"{key}: {StockDataAPI.data_to_string(value)}")
-            return "{\n" + "\n".join(result) + "\n}"
-        
-        elif isinstance(data, list):
-            # Convert each item in the list to a string
-            return "[" + ", ".join(StockDataAPI.data_to_string(item) for item in data) + "]"
-        
-        else:
-            # For basic types (str, int, float), convert directly to string
-            return str(data)
+def fetch_financial_data(ticker: str):
+    # Create a Ticker object for the stock symbol
+    stock = yf.Ticker(ticker)
+
+    # Fetch key financial data from the stock info
+    info = stock.info
+
+    # Extract necessary information
+    financial_data = {
+        "Revenue (Sales)": info.get("totalRevenue"),
+        "Gross Margin": info.get("grossMargins"),
+        "Free Cash Flow": info.get("freeCashflow"),
+        "Net Debt": info.get("totalDebt", 0) - info.get("cash", 0),
+        "EBITDA": info.get("ebitda"),
+        "EPS": info.get("trailingEps")
+    }
+    
+    # Convert to strings to prepare for prompt, format as needed
+    financial_data_str = {
+        key: f"{value:,.2f}" if value is not None else "N/A"
+        for key, value in financial_data.items()
+    }
+    
+    return financial_data_str
+
+
+def fetch_historical_financials(ticker: str):
+    # Create a Ticker object
+    stock = yf.Ticker(ticker)
+
+    # Retrieve financial statements
+    income_statement = stock.financials.T  # Transpose to have dates as rows
+    balance_sheet = stock.balance_sheet.T
+    cash_flow = stock.cashflow.T
+
+    # Prepare data for each metric
+    historical_data = pd.DataFrame({
+        "Revenue (Sales)": income_statement.get("Total Revenue"),
+        "Free Cash Flow": cash_flow.get("Free Cash Flow"),
+    })
+
+    # Format data for readability
+    historical_data = historical_data.applymap(lambda x: f"{x:,.2f}" if pd.notnull(x) else "N/A")
+
+    return historical_data, balance_sheet
