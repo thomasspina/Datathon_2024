@@ -3,7 +3,7 @@ from src.data.stock_data import StockDataAPI
 from src.models.bedrock_agent import BedrockAgent
 import uuid
 
-from src.data.buit_graphs import display_cash_flow
+from src.data.buit_graphs import display_cash_flow, display_compare
 
 class MainComponent():
     def __init__(self):
@@ -82,8 +82,10 @@ class MainComponent():
 
 
     def add_dashboard_metrics(self):
-        financials = StockDataAPI.get_financials(st.session_state.symbol)
+        financials = StockDataAPI.get_financials()
         display_cash_flow(financials)
+        industry = StockDataAPI.get_industry_info()
+        display_compare(industry)
     
 
     def add_dashboard_information(self):
